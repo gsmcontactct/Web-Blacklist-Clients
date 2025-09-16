@@ -1,9 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, send_file
-import sqlite3
+import sqlite3, os
 
 app = Flask(__name__)
 
-DB_NAME = 'blacklist.db'
+# folosim /tmp ca să fim siguri că avem write access pe Render
+DB_NAME = os.path.join("/tmp", "blacklist.db")
 
 def init_db():
     conn = sqlite3.connect(DB_NAME)
@@ -15,6 +16,9 @@ def init_db():
                     reason TEXT)''')
     conn.commit()
     conn.close()
+
+# APEL DIRECT LA IMPORT (fix pentru Render)
+init_db()
 
 @app.route('/')
 def index():
@@ -51,5 +55,4 @@ def download_db():
     return send_file(DB_NAME, as_attachment=True)
 
 if __name__ == '__main__':
-    init_db()
     app.run(host='0.0.0.0', port=5000)
