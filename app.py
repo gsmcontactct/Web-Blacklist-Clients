@@ -1,15 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for, send_file, flash
+from flask import Flask, render_template, request, redirect, send_file
 import sqlite3
 import os
 
 app = Flask(__name__)
-app.secret_key = "supersecretkey"  # pentru flash messages
-DATABASE = "blacklist.db"
+DB_NAME = "clients.db"
 
 
-# === Baza de date ===
 def init_db():
-    conn = sqlite3.connect(DATABASE)
+    conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     c.execute("""
         CREATE TABLE IF NOT EXISTS blacklist (
@@ -24,78 +22,63 @@ def init_db():
 
 
 def get_all():
-    conn = sqlite3.connect(DATABASE)
+    conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     c.execute("SELECT id, name, phone, reason FROM blacklist ORDER BY id DESC")
-    data = c.fetchall()
+    rows = c.fetchall()
     conn.close()
-    return data
+    return rows
 
 
-def add_client(name, phone, reason):
-    conn = sqlite3.connect(DATABASE)
-    c = conn.cursor()
-    c.execute("INSERT INTO blacklist (name, phone, reason) VALUES (?, ?, ?)", (name, phone, reason))
-    conn.commit()
-    conn.close()
-
-
-def delete_client(client_id):
-    conn = sqlite3.connect(DATABASE)
-    c = conn.cursor()
-    c.execute("DELETE FROM blacklist WHERE id = ?", (client_id,))
-    conn.commit()
-    conn.close()
-
-
-# === Rute Flask ===
 @app.route("/")
 def index():
+    init_db()  # se asigură că tabela există mereu
     clients = get_all()
     return render_template("index.html", clients=clients)
 
 
 @app.route("/add", methods=["POST"])
 def add():
-    name = request.form["name"]
-    phone = request.form["phone"]
-    reason = request.form.get("reason", "")
+    name = request.form.get("name")
+    phone = request.form.get("phone")
+    reason = request.form.get("reason")
 
-    add_client(name, phone, reason)
-    flash("Client adăugat cu succes ✅", "success")
-    return redirect(url_for("index"))
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("INSERT INTO blacklist (name, phone, reason) VALUES (?, ?, ?)",
+              (name, phone, reason))
+    conn.commit()
+    conn.close()
+    return redirect("/")
 
 
 @app.route("/delete/<int:client_id>")
 def delete(client_id):
-    delete_client(client_id)
-    flash("Client șters ❌", "warning")
-    return redirect(url_for("index"))
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("DELETE FROM blacklist WHERE id = ?", (client_id,))
+    conn.commit()
+    conn.close()
+    return redirect("/")
 
 
 @app.route("/download-db")
 def download_db():
-    if os.path.exists(DATABASE):
-        return send_file(DATABASE, as_attachment=True)
-    flash("Nu există baza de date de descărcat", "danger")
-    return redirect(url_for("index"))
+    return send_file(DB_NAME, as_attachment=True)
 
 
 @app.route("/upload-db", methods=["POST"])
 def upload_db():
     if "file" not in request.files:
-        flash("Niciun fișier selectat", "danger")
-        return redirect(url_for("index"))
+        return "No file part", 400
 
     file = request.files["file"]
     if file.filename == "":
-        flash("Numele fișierului este invalid", "danger")
-        return redirect(url_for("index"))
+        return "No selected file", 400
 
-    if file:
-        file.save(DATABASE)  # suprascrie DB
-        flash("Baza de date a fost încărcată cu succes ✅", "success")
-        return redirect(url_for("index"))
+    file.save(DB_NAME)
+    init_db()
+    return redirect("/")
 
 
 if __name__ == "__main__":
