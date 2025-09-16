@@ -1,106 +1,103 @@
 import os
 import sqlite3
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-app.secret_key = "supersecretkey"
+app.secret_key = "supersecret"
 
 DB_FILE = "blacklist.db"
 
 
 def init_db():
-    """Creează baza de date dacă nu există."""
-    with sqlite3.connect(DB_FILE) as conn:
-        c = conn.cursor()
-        c.execute(
-            """CREATE TABLE IF NOT EXISTS blacklist (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                nume TEXT NOT NULL,
-                telefon TEXT NOT NULL
-            )"""
-        )
-        conn.commit()
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute(
+        """CREATE TABLE IF NOT EXISTS blacklist (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nume TEXT NOT NULL,
+            telefon TEXT NOT NULL
+        )"""
+    )
+    conn.commit()
+    conn.close()
 
 
 def get_all():
-    with sqlite3.connect(DB_FILE) as conn:
-        c = conn.cursor()
-        c.execute("SELECT id, nume, telefon FROM blacklist ORDER BY id DESC")
-        return c.fetchall()
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute("SELECT id, nume, telefon FROM blacklist ORDER BY id DESC")
+    rows = c.fetchall()
+    conn.close()
+    return rows
 
 
-def search_rows(q):
-    with sqlite3.connect(DB_FILE) as conn:
-        c = conn.cursor()
-        like = f"%{q}%"
+@app.route("/", methods=["GET"])
+def index():
+    q = request.args.get("q", "")
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    if q:
         c.execute(
             "SELECT id, nume, telefon FROM blacklist WHERE nume LIKE ? OR telefon LIKE ? ORDER BY id DESC",
-            (like, like),
+            (f"%{q}%", f"%{q}%"),
         )
-        return c.fetchall()
-
-
-@app.route("/", methods=["GET", "POST"])
-def index():
-    q = request.args.get("q", "").strip()
-    if q:
-        rows = search_rows(q)
     else:
-        rows = get_all()
+        c.execute("SELECT id, nume, telefon FROM blacklist ORDER BY id DESC")
+    rows = c.fetchall()
+    conn.close()
     return render_template("index.html", rows=rows, query=q)
 
 
 @app.route("/add", methods=["POST"])
 def add():
-    nume = request.form.get("nume", "").strip()
-    telefon = request.form.get("telefon", "").strip()
-    if nume and telefon:
-        with sqlite3.connect(DB_FILE) as conn:
-            c = conn.cursor()
-            c.execute("INSERT INTO blacklist (nume, telefon) VALUES (?, ?)", (nume, telefon))
-            conn.commit()
-        flash("Client adăugat în blacklist ✅", "success")
-    else:
-        flash("Toate câmpurile sunt obligatorii ❌", "danger")
+    nume = request.form["nume"]
+    telefon = request.form["telefon"]
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute("INSERT INTO blacklist (nume, telefon) VALUES (?, ?)", (nume, telefon))
+    conn.commit()
+    conn.close()
+    flash("Client adăugat în blacklist", "success")
     return redirect(url_for("index"))
 
 
 @app.route("/delete", methods=["POST"])
 def delete():
-    row_id = request.form.get("id")
-    if row_id:
-        with sqlite3.connect(DB_FILE) as conn:
-            c = conn.cursor()
-            c.execute("DELETE FROM blacklist WHERE id = ?", (row_id,))
-            conn.commit()
-        flash("Client șters din blacklist 🗑️", "warning")
+    client_id = request.form["id"]
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute("DELETE FROM blacklist WHERE id=?", (client_id,))
+    conn.commit()
+    conn.close()
+    flash("Client șters", "warning")
     return redirect(url_for("index"))
 
 
-@app.route("/download")
+@app.route("/download_db")
 def download_db():
-    if not os.path.exists(DB_FILE):
-        flash("Baza de date nu există!", "danger")
-        return redirect(url_for("index"))
     return send_file(DB_FILE, as_attachment=True)
 
 
-@app.route("/upload", methods=["POST"])
+@app.route("/upload_db", methods=["POST"])
 def upload_db():
-    file = request.files.get("file")
-    if not file:
-        flash("Nu ai selectat niciun fișier ❌", "danger")
+    if "file" not in request.files:
+        flash("Niciun fișier selectat", "danger")
         return redirect(url_for("index"))
 
-    if not file.filename.endswith(".db"):
-        flash("Trebuie să încarci un fișier .db ❌", "danger")
+    file = request.files["file"]
+    if file.filename == "":
+        flash("Numele fișierului este gol", "danger")
         return redirect(url_for("index"))
 
+    filename = secure_filename(file.filename)
     file.save(DB_FILE)
-    flash("Baza de date a fost încărcată cu succes ✅", "success")
+    flash("Baza de date a fost încărcată cu succes", "success")
     return redirect(url_for("index"))
 
 
+# ⚡ Asta face ca init_db să ruleze și pe Render, nu doar local
+init_db()
+
 if __name__ == "__main__":
-    init_db()
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(debug=True)
