@@ -72,6 +72,8 @@ def download_db():
     return send_file(DB_FILE, as_attachment=True)
 
 
+# 👉 Se execută mereu, chiar și când Gunicorn pornește
+init_db()
+
 if __name__ == "__main__":
-    init_db()  # <-- creează tabela dacă nu există
     app.run(host="0.0.0.0", port=5000, debug=True)
