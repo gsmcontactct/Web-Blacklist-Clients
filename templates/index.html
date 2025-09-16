@@ -1,102 +1,42 @@
-<!doctype html>
-<html lang="ro">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Blacklist Clienți</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <meta charset="UTF-8">
+    <title>Blacklist Clients</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body class="bg-light">
-
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="{{ url_for('index') }}">📋 Blacklist Clienți</a>
-      <div class="d-flex">
-        <a href="{{ url_for('download_db') }}" class="btn btn-outline-light btn-sm me-2">📥 Descarcă DB</a>
-        <form method="post" action="{{ url_for('upload_db') }}" enctype="multipart/form-data" class="d-flex">
-          <input type="file" name="file" class="form-control form-control-sm me-2" required>
-          <button class="btn btn-outline-light btn-sm">📤 Încarcă DB</button>
-        </form>
-      </div>
-    </div>
-  </nav>
-
-  <div class="container">
-
-    <!-- Mesaje flash -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for cat, msg in messages %}
-          <div class="alert alert-{{ 'secondary' if cat=='info' else cat }} alert-dismissible fade show" role="alert">
-            {{ msg }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
+<body>
+    <h1>📋 Blacklist Clients</h1>
 
     <!-- Formular adăugare client -->
-    <div class="card mb-4 shadow-sm">
-      <div class="card-header bg-primary text-white">
-        ➕ Adaugă Client
-      </div>
-      <div class="card-body">
-        <form action="{{ url_for('add') }}" method="POST" class="row g-2">
-          <div class="col-md-3">
-            <input type="text" name="name" class="form-control" placeholder="Nume" required>
-          </div>
-          <div class="col-md-3">
-            <input type="text" name="phone" class="form-control" placeholder="Telefon" required>
-          </div>
-          <div class="col-md-4">
-            <input type="text" name="reason" class="form-control" placeholder="Motiv">
-          </div>
-          <div class="col-md-2 d-grid">
-            <button type="submit" class="btn btn-success">✅ Adaugă</button>
-          </div>
+    <form action="/add" method="POST">
+        <input type="text" name="name" placeholder="Nume" required>
+        <input type="text" name="phone" placeholder="Telefon" required>
+        <input type="text" name="reason" placeholder="Motiv">
+        <button type="submit">Adaugă</button>
+    </form>
+
+    <h2>Lista</h2>
+    <table>
+        <tr><th>ID</th><th>Nume</th><th>Telefon</th><th>Motiv</th><th>Acțiuni</th></tr>
+        {% for client in clients %}
+        <tr>
+            <td>{{ client[0] }}</td>
+            <td>{{ client[1] }}</td>
+            <td>{{ client[2] }}</td>
+            <td>{{ client[3] }}</td>
+            <td><a href="/delete/{{ client[0] }}">🗑️ Șterge</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <!-- Butoane DB -->
+    <div style="margin-top:20px;">
+        <a href="{{ url_for('download_db') }}">📥 Descarcă baza de date</a>
+        <form action="{{ url_for('upload_db') }}" method="POST" enctype="multipart/form-data" style="margin-top:10px;">
+            <input type="file" name="file" required>
+            <button type="submit">📤 Încarcă baza de date</button>
         </form>
-      </div>
     </div>
-
-    <!-- Lista clienților -->
-    <div class="card shadow-sm">
-      <div class="card-header bg-dark text-white">
-        📑 Lista Clienților
-      </div>
-      <div class="card-body p-0">
-        {% if clients %}
-        <table class="table table-striped mb-0">
-          <thead class="table-dark">
-            <tr>
-              <th>ID</th>
-              <th>Nume</th>
-              <th>Telefon</th>
-              <th>Motiv</th>
-              <th>Acțiuni</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for client in clients %}
-            <tr>
-              <td>{{ client[0] }}</td>
-              <td>{{ client[1] }}</td>
-              <td>{{ client[2] }}</td>
-              <td>{{ client[3] }}</td>
-              <td>
-                <a href="{{ url_for('delete', client_id=client[0]) }}" class="btn btn-sm btn-danger">🗑️ Șterge</a>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        {% else %}
-        <div class="p-3 text-center">⚠️ Niciun client în blacklist</div>
-        {% endif %}
-      </div>
-    </div>
-
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
