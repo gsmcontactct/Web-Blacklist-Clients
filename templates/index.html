@@ -9,36 +9,57 @@
     <h1>📋 Blacklist Clienți</h1>
 
     <!-- Formular adăugare client -->
-    <form action="/add" method="POST">
+    <form action="{{ url_for('add') }}" method="POST">
         <input type="text" name="name" placeholder="Nume" required>
         <input type="text" name="phone" placeholder="Telefon" required>
         <input type="text" name="reason" placeholder="Motiv">
-        <button type="submit">Adaugă</button>
+        <button type="submit">➕ Adaugă</button>
     </form>
 
-    <h2>Lista</h2>
+    <!-- Mesaje flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+          {% for cat, msg in messages %}
+            <li><strong>{{ cat|capitalize }}:</strong> {{ msg }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <h2>📑 Lista Clienți</h2>
+    {% if clients %}
     <table>
-        <tr><th>ID</th><th>Nume</th><th>Telefon</th><th>Motiv</th><th>Acțiuni</th></tr>
+        <tr>
+            <th>ID</th>
+            <th>Nume</th>
+            <th>Telefon</th>
+            <th>Motiv</th>
+            <th>Acțiuni</th>
+        </tr>
         {% for client in clients %}
         <tr>
             <td>{{ client[0] }}</td>
             <td>{{ client[1] }}</td>
             <td>{{ client[2] }}</td>
             <td>{{ client[3] }}</td>
-            <td><a href="/delete/{{ client[0] }}">🗑️ Șterge</a></td>
+            <td><a href="{{ url_for('delete', client_id=client[0]) }}">🗑️ Șterge</a></td>
         </tr>
-        {% else %}
-        <tr><td colspan="5">Niciun client în blacklist</td></tr>
         {% endfor %}
     </table>
+    {% else %}
+        <p><em>Niciun client în blacklist</em></p>
+    {% endif %}
 
-    <!-- Secțiune backup DB -->
-    <div style="margin-top:20px;">
-        <a href="/download-db">📥 Descarcă baza de date</a>
-        <form action="/upload-db" method="POST" enctype="multipart/form-data" style="margin-top:10px;">
-            <input type="file" name="file" required>
-            <button type="submit">📤 Încarcă DB</button>
-        </form>
-    </div>
+    <hr>
+
+    <!-- Download DB -->
+    <p><a href="{{ url_for('download_db') }}">📥 Descarcă baza de date</a></p>
+
+    <!-- Upload DB -->
+    <form action="{{ url_for('upload_db') }}" method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" required>
+        <button type="submit">📤 Încarcă baza de date</button>
+    </form>
 </body>
 </html>
