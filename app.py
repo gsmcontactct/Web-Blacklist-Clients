@@ -13,6 +13,7 @@ def normalize(text):
 
 
 def init_db():
+    """Creează baza de date și tabela dacă nu există"""
     Path(DB_FILE).parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -96,23 +97,9 @@ def download_db():
     return send_file(DB_FILE, as_attachment=True)
 
 
-@app.route("/upload-db", methods=["POST"])
-def upload_db():
-    """Permite încărcarea unei baze de date SQLite"""
-    file = request.files.get("dbfile")
-    if not file:
-        flash("Nu ai selectat niciun fișier", "danger")
-        return redirect(url_for("index"))
-
-    if not file.filename.endswith(".db"):
-        flash("Fișier invalid (trebuie .db)", "danger")
-        return redirect(url_for("index"))
-
-    file.save(DB_FILE)
-    flash("Baza de date a fost încărcată cu succes", "success")
-    return redirect(url_for("index"))
-
-
 if __name__ == "__main__":
     init_db()
     app.run(debug=True)
+else:
+    # când rulează pe gunicorn, inițializează DB-ul
+    init_db()
