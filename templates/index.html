@@ -17,6 +17,7 @@
     </form>
 
     <h2>Lista</h2>
+    {% if clients %}
     <table>
         <tr><th>ID</th><th>Nume</th><th>Telefon</th><th>Motiv</th><th>Acțiuni</th></tr>
         {% for client in clients %}
@@ -29,14 +30,35 @@
         </tr>
         {% endfor %}
     </table>
+    {% else %}
+        <p><i>Niciun client în blacklist.</i></p>
+    {% endif %}
 
-    <!-- Butoane DB -->
-    <div style="margin-top:20px;">
-        <a href="{{ url_for('download_db') }}">📥 Descarcă baza de date</a>
-        <form action="{{ url_for('upload_db') }}" method="POST" enctype="multipart/form-data" style="margin-top:10px;">
-            <input type="file" name="file" required>
-            <button type="submit">📤 Încarcă baza de date</button>
-        </form>
-    </div>
+    <br>
+    <a href="/download-db">📥 Descarcă baza de date</a>
+
+    <h2>📤 Încarcă baza de date</h2>
+    <form action="/upload-db" method="POST" enctype="multipart/form-data">
+        <label class="custom-file-upload">
+            📂 Alege fișier
+            <input type="file" name="file" id="fileInput" required>
+        </label>
+        <span id="fileName">Niciun fișier selectat</span>
+        <button type="submit">Urcă</button>
+    </form>
+
+    <!-- Script pentru afișare nume fișier -->
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const fileName = document.getElementById('fileName');
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                fileName.textContent = fileInput.files[0].name;
+            } else {
+                fileName.textContent = "Niciun fișier selectat";
+            }
+        });
+    </script>
 </body>
 </html>
