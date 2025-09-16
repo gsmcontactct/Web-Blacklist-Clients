@@ -1,71 +1,77 @@
 body { 
-    font-family: Arial, sans-serif; 
-    margin: 20px; 
-    background: #f7f7f7; 
+  font-family: Arial, sans-serif; 
+  margin: 20px; 
+  background: #f7f7f7; 
 }
 
-h1 { 
-    color: #333; 
-}
+h1 { color: #333; }
 
 form input { 
-    margin: 5px; 
-    padding: 5px; 
+  margin: 5px; 
+  padding: 5px; 
 }
 
 button { 
-    padding: 5px 10px; 
-    background: #28a745; 
-    color: white; 
-    border: none; 
-    cursor: pointer; 
-    border-radius: 4px;
+  padding: 5px 10px; 
+  background: #28a745; 
+  color: white; 
+  border: none; 
+  cursor: pointer; 
+  border-radius: 4px;
 }
 
 button:hover {
-    background: #218838;
+  background: #218838;
 }
 
 table { 
-    width: 100%; 
-    border-collapse: collapse; 
-    margin-top: 20px; 
-    background: white; 
+  width: 100%; 
+  border-collapse: collapse; 
+  margin-top: 20px; 
+  background: white; 
 }
 
 th, td { 
-    border: 1px solid #ccc; 
-    padding: 8px; 
-    text-align: left; 
+  border: 1px solid #ccc; 
+  padding: 8px; 
+  text-align: left; 
 }
 
 a { 
-    text-decoration: none; 
-    color: red; 
+  text-decoration: none; 
+  color: red; 
 }
 
-/* --- Custom file upload --- */
-.custom-file-upload {
-    display: inline-block;
-    padding: 6px 12px;
-    cursor: pointer;
-    border-radius: 4px;
-    background-color: #007BFF;
-    color: white;
-    font-weight: bold;
-    margin-right: 10px;
-    transition: background 0.2s;
+/* === Upload Styling === */
+.upload-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
 }
 
-.custom-file-upload:hover {
-    background-color: #0056b3;
+.upload-container input[type="file"] {
+  display: none;
 }
 
-input[type="file"] {
-    display: none;
+.upload-btn {
+  display: inline-block;
+  background: #007bff;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.3s ease;
 }
 
-#fileName {
-    font-style: italic;
-    color: #555;
+.upload-btn:hover {
+  background: #0056b3;
+}
+
+#file-chosen {
+  font-size: 13px;
+  color: #555;
+  font-style: italic;
 }

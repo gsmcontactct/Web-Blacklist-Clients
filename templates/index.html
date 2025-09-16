@@ -16,6 +16,16 @@
         <button type="submit">Adaugă</button>
     </form>
 
+    <!-- Upload baza de date -->
+    <form action="/upload-db" method="POST" enctype="multipart/form-data" class="upload-form">
+        <div class="upload-container">
+            <label for="file-upload" class="upload-btn">📤 Încarcă baza de date</label>
+            <input type="file" id="file-upload" name="file">
+            <span id="file-chosen">Niciun fișier selectat</span>
+        </div>
+        <button type="submit">Încarcă</button>
+    </form>
+
     <h2>Lista</h2>
     {% if clients %}
     <table>
@@ -31,34 +41,18 @@
         {% endfor %}
     </table>
     {% else %}
-        <p><i>Niciun client în blacklist.</i></p>
+    <p><i>Niciun client în blacklist</i></p>
     {% endif %}
 
-    <br>
     <a href="/download-db">📥 Descarcă baza de date</a>
 
-    <h2>📤 Încarcă baza de date</h2>
-    <form action="/upload-db" method="POST" enctype="multipart/form-data">
-        <label class="custom-file-upload">
-            📂 Alege fișier
-            <input type="file" name="file" id="fileInput" required>
-        </label>
-        <span id="fileName">Niciun fișier selectat</span>
-        <button type="submit">Urcă</button>
-    </form>
-
-    <!-- Script pentru afișare nume fișier -->
     <script>
-        const fileInput = document.getElementById('fileInput');
-        const fileName = document.getElementById('fileName');
+      const fileInput = document.getElementById("file-upload");
+      const fileChosen = document.getElementById("file-chosen");
 
-        fileInput.addEventListener('change', () => {
-            if (fileInput.files.length > 0) {
-                fileName.textContent = fileInput.files[0].name;
-            } else {
-                fileName.textContent = "Niciun fișier selectat";
-            }
-        });
+      fileInput.addEventListener("change", function() {
+        fileChosen.textContent = this.files.length > 0 ? this.files[0].name : "Niciun fișier selectat";
+      });
     </script>
 </body>
 </html>
