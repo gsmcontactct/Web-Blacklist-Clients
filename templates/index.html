@@ -1,69 +1,61 @@
-{% extends "base.html" %}
-{% block content %}
-<div class="row">
-  <div class="col-md-5">
-    <div class="card mb-3">
-      <div class="card-body">
-        <h5 class="card-title">Adaugă client în blacklist</h5>
-        <form method="post" action="{{ url_for('add') }}">
-          <div class="mb-2">
-            <label class="form-label">Nume</label>
-            <input class="form-control" name="nume" required />
-          </div>
-          <div class="mb-2">
-            <label class="form-label">Telefon</label>
-            <input class="form-control" name="telefon" required />
-          </div>
-          <button class="btn btn-danger">Adaugă în blacklist</button>
-        </form>
-      </div>
-    </div>
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <title>Blacklist Clienți</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>📋 Blacklist Clienți</h1>
 
-    <div class="card">
-      <div class="card-body">
-        <h5 class="card-title">Caută client</h5>
-        <form method="get" action="{{ url_for('index') }}">
-          <div class="input-group">
-            <input class="form-control" name="q" value="{{ query }}" placeholder="Nume sau telefon" />
-            <button class="btn btn-outline-secondary">Caută</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+    <!-- Formular adăugare client -->
+    <form action="{{ url_for('add') }}" method="POST">
+        <input type="text" name="name" placeholder="Nume" required>
+        <input type="text" name="phone" placeholder="Telefon" required>
+        <input type="text" name="reason" placeholder="Motiv">
+        <button type="submit">➕ Adaugă</button>
+    </form>
 
-  <div class="col-md-7">
-    <div class="card">
-      <div class="card-body">
-        <h5 class="card-title">Lista blacklist</h5>
-        <form method="post" action="{{ url_for('delete') }}">
-          <table class="table table-sm">
-            <thead>
-              <tr>
-                <th>#</th>
+    <!-- Formular căutare -->
+    <form action="{{ url_for('index') }}" method="GET" style="margin-top: 10px;">
+        <input type="text" name="q" value="{{ query }}" placeholder="Caută nume sau telefon">
+        <button type="submit">🔍 Caută</button>
+    </form>
+
+    <!-- Lista clienți -->
+    <h2>Lista Blacklist</h2>
+    <form action="{{ url_for('delete') }}" method="POST">
+        <table>
+            <tr>
+                <th>ID</th>
                 <th>Nume</th>
                 <th>Telefon</th>
-                <th>Acțiune</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for r in rows %}
-              <tr>
-                <td>{{ r[0] }}</td>
-                <td>{{ r[1] }}</td>
-                <td>{{ r[2] }}</td>
+                <th>Motiv</th>
+                <th>Acțiuni</th>
+            </tr>
+            {% for client in clients %}
+            <tr>
+                <td>{{ client[0] }}</td>
+                <td>{{ client[1] }}</td>
+                <td>{{ client[2] }}</td>
+                <td>{{ client[3] }}</td>
                 <td>
-                  <button type="submit" class="btn btn-sm btn-outline-danger" name="id" value="{{ r[0] }}" onclick="return confirm('Ștergi clientul?')">Șterge</button>
+                    <button type="submit" name="id" value="{{ client[0] }}" onclick="return confirm('Ștergi clientul?')">🗑️ Șterge</button>
                 </td>
-              </tr>
-              {% else %}
-              <tr><td colspan="4" class="text-center">Niciun client</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" style="text-align: center;">Niciun client</td></tr>
+            {% endfor %}
+        </table>
+    </form>
+
+    <!-- Butoane DB -->
+    <div style="margin-top: 20px;">
+        <a href="{{ url_for('download_db') }}">📥 Descarcă baza de date</a>
+        <form action="{{ url_for('upload_db') }}" method="POST" enctype="multipart/form-data" style="margin-top: 10px;">
+            <input type="file" name="file" required>
+            <button type="submit">📤 Încarcă baza de date</button>
         </form>
-      </div>
     </div>
-  </div>
-</div>
-{% endblock %}
+</body>
+</html>
