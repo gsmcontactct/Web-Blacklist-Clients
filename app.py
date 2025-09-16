@@ -97,9 +97,22 @@ def download_db():
     return send_file(DB_FILE, as_attachment=True)
 
 
+@app.route("/upload-db", methods=["POST"])
+def upload_db():
+    """Permite încărcarea unei baze de date SQLite"""
+    file = request.files.get("file")
+    if not file:
+        flash("Nu ai selectat niciun fișier", "danger")
+        return redirect(url_for("index"))
+
+    # suprascrie fișierul existent
+    file.save(DB_FILE)
+    flash("Baza de date a fost încărcată cu succes!", "success")
+    return redirect(url_for("index"))
+
+
+# Rulează init_db la pornire (și local și pe Render/Gunicorn)
+init_db()
+
 if __name__ == "__main__":
-    init_db()
     app.run(debug=True)
-else:
-    # când rulează pe gunicorn, inițializează DB-ul
-    init_db()
