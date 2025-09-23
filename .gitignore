@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+instance/
+credentials.json
+token.json
+settings.yaml
+.env
+"client_secret_*.json" 
+client_secret_*.json 
+client_secret_*.json 

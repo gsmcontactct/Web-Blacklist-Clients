@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <title>Blacklist Clienți</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>📋 Blacklist Clienți</h1>
+
+    <form action="/add" method="POST">
+        <input type="text" name="name" placeholder="Nume" required>
+        <input type="text" name="phone" placeholder="Telefon" required>
+        <input type="text" name="reason" placeholder="Motiv">
+        <button type="submit">Adaugă</button>
+    </form>
+
+    <h2>Acțiuni</h2>
+    <a href="/download-db">📥 Descarcă DB</a> |
+    <a href="/drive-upload">☁️ Urcă în Drive</a> |
+    <a href="/drive-download">☁️ Descarcă din Drive</a>
+
+    <h2>Lista</h2>
+    {% if clients %}
+    <table>
+        <tr><th>ID</th><th>Nume</th><th>Telefon</th><th>Motiv</th><th>Acțiuni</th></tr>
+        {% for client in clients %}
+        <tr>
+            <td>{{ client[0] }}</td>
+            <td>{{ client[1] }}</td>
+            <td>{{ client[2] }}</td>
+            <td>{{ client[3] }}</td>
+            <td><a href="/delete/{{ client[0] }}">🗑️ Șterge</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p><i>Niciun client în blacklist</i></p>
+    {% endif %}
+</body>
+</html>
