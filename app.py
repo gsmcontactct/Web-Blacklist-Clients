@@ -1,105 +1,61 @@
-from flask import Flask, render_template, request, redirect, send_file
-import sqlite3
+from flask import Flask, redirect, url_for, session, request
+from flask_session import Session
+from google_auth_oauthlib.flow import Flow
+from google.oauth2 import id_token
+from google.auth.transport import requests
 import os
-from pydrive2.auth import GoogleAuth
-from pydrive2.drive import GoogleDrive
 
 app = Flask(__name__)
-DB_NAME = "clients.db"
+app.secret_key = os.environ.get("SECRET_KEY", "supersecretkey")
+app.config["SESSION_TYPE"] = "filesystem"
+Session(app)
 
-def init_db():
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS blacklist (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            phone TEXT NOT NULL,
-            reason TEXT
-        )
-    """)
-    conn.commit()
-    conn.close()
+# ID-ul clientului din Google Cloud
+GOOGLE_CLIENT_ID = "719346996126-21usai8levnb6fisrd8m42j30fhj6ecl.apps.googleusercontent.com"
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"  # doar pentru dezvoltare locală
 
-def get_all():
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute("SELECT id, name, phone, reason FROM blacklist ORDER BY id DESC")
-    rows = c.fetchall()
-    conn.close()
-    return rows
-
-def get_drive():
-    gauth = GoogleAuth()
-    gauth.LoadCredentialsFile("token.json")
-    if not gauth.credentials or gauth.access_token_expired:
-        gauth.LocalWebserverAuth()
-        gauth.SaveCredentialsFile("token.json")
-    return GoogleDrive(gauth)
+# setup Flow
+flow = Flow.from_client_secrets_file(
+    "client_secrets.json",  # <-- asigură-te că fișierul are fix acest nume
+    scopes=["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email", "openid"],
+    redirect_uri="https://blacklist-flask.onrender.com/callback"  # ajustează cu domeniul tău Render
+)
 
 @app.route("/")
 def index():
-    init_db()
-    clients = get_all()
-    return render_template("index.html", clients=clients)
+    if "google_id" in session:
+        return f"Bine ai venit, {session['name']}!"
+    return '<a href="/login">Login cu Google</a>'
 
-@app.route("/add", methods=["POST"])
-def add():
-    name = request.form.get("name")
-    phone = request.form.get("phone")
-    reason = request.form.get("reason")
+@app.route("/login")
+def login():
+    authorization_url, state = flow.authorization_url()
+    session["state"] = state
+    return redirect(authorization_url)
 
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute("INSERT INTO blacklist (name, phone, reason) VALUES (?, ?, ?)",
-              (name, phone, reason))
-    conn.commit()
-    conn.close()
-    return redirect("/")
+@app.route("/callback")
+def callback():
+    flow.fetch_token(authorization_response=request.url)
 
-@app.route("/delete/<int:client_id>")
-def delete(client_id):
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute("DELETE FROM blacklist WHERE id = ?", (client_id,))
-    conn.commit()
-    conn.close()
-    return redirect("/")
+    if not session["state"] == request.args["state"]:
+        return "State mismatch", 400
 
-@app.route("/download-db")
-def download_db():
-    return send_file(DB_NAME, as_attachment=True)
+    credentials = flow.credentials
+    request_session = requests.Request()
+    id_info = id_token.verify_oauth2_token(
+        id_token=credentials.id_token,
+        request=request_session,
+        audience=GOOGLE_CLIENT_ID
+    )
 
-@app.route("/upload-db", methods=["POST"])
-def upload_db():
-    if "file" not in request.files:
-        return "No file part", 400
+    session["google_id"] = id_info.get("sub")
+    session["name"] = id_info.get("name")
+    return redirect(url_for("index"))
 
-    file = request.files["file"]
-    if file.filename == "":
-        return "No selected file", 400
-
-    file.save(DB_NAME)
-    init_db()
-    return redirect("/")
-
-@app.route("/drive-upload")
-def drive_upload():
-    drive = get_drive()
-    file = drive.CreateFile({"title": DB_NAME})
-    file.SetContentFile(DB_NAME)
-    file.Upload()
-    return redirect("/")
-
-@app.route("/drive-download")
-def drive_download():
-    drive = get_drive()
-    file_list = drive.ListFile({'q': f"title='{DB_NAME}'"}).GetList()
-    if file_list:
-        file_list[0].GetContentFile(DB_NAME)
-        return redirect("/")
-    return "DB not found in Drive", 404
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("index"))
 
 if __name__ == "__main__":
-    init_db()
     app.run(debug=True)
