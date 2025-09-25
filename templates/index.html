@@ -8,6 +8,7 @@
 <body>
     <h1>📋 Blacklist Clienți</h1>
 
+    <!-- Formular adăugare client -->
     <form action="/add" method="POST">
         <input type="text" name="name" placeholder="Nume" required>
         <input type="text" name="phone" placeholder="Telefon" required>
@@ -15,10 +16,15 @@
         <button type="submit">Adaugă</button>
     </form>
 
-    <h2>Acțiuni</h2>
-    <a href="/download-db">📥 Descarcă DB</a> |
-    <a href="/drive-upload">☁️ Urcă în Drive</a> |
-    <a href="/drive-download">☁️ Descarcă din Drive</a>
+    <!-- Upload baza de date -->
+    <form action="/upload-db" method="POST" enctype="multipart/form-data" class="upload-form">
+        <div class="upload-container">
+            <label for="file-upload" class="upload-btn">📤 Încarcă baza de date</label>
+            <input type="file" id="file-upload" name="file">
+            <span id="file-chosen">Niciun fișier selectat</span>
+        </div>
+        <button type="submit">Încarcă</button>
+    </form>
 
     <h2>Lista</h2>
     {% if clients %}
@@ -37,5 +43,16 @@
     {% else %}
     <p><i>Niciun client în blacklist</i></p>
     {% endif %}
+
+    <a href="/download-db">📥 Descarcă baza de date</a>
+
+    <script>
+      const fileInput = document.getElementById("file-upload");
+      const fileChosen = document.getElementById("file-chosen");
+
+      fileInput.addEventListener("change", function() {
+        fileChosen.textContent = this.files.length > 0 ? this.files[0].name : "Niciun fișier selectat";
+      });
+    </script>
 </body>
 </html>

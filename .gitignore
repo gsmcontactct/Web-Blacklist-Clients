@@ -1,8 +1,4 @@
+blacklist.db
 __pycache__/
 *.pyc
-instance/
-credentials.json
-token.json
-settings.yaml
 .env
-client_secret*.json
