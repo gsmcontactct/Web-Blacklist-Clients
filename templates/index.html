@@ -19,12 +19,18 @@
     <!-- Upload baza de date -->
     <form action="/upload-db" method="POST" enctype="multipart/form-data" class="upload-form">
         <div class="upload-container">
-            <label for="file-upload" class="upload-btn">📤 Încarcă baza de date</label>
+            <label for="file-upload" class="upload-btn">📤 Încarcă baza de date manual</label>
             <input type="file" id="file-upload" name="file">
             <span id="file-chosen">Niciun fișier selectat</span>
         </div>
         <button type="submit">Încarcă</button>
     </form>
+
+    <!-- Dropbox buttons -->
+    <div class="dropbox-buttons">
+        <a href="/save-dropbox" class="btn-blue">📤 Salvează în Dropbox</a>
+        <a href="/load-dropbox" class="btn-blue">📥 Încarcă din Dropbox</a>
+    </div>
 
     <h2>Lista</h2>
     {% if clients %}

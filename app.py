@@ -1,8 +1,10 @@
-from flask import Flask, render_template, request, redirect, send_file
+from flask import Flask, render_template, request, redirect, send_file, flash
 import sqlite3
 import os
+import dropbox
 
 app = Flask(__name__)
+app.secret_key = "supersecret"
 DB_NAME = "clients.db"
 
 
@@ -30,9 +32,16 @@ def get_all():
     return rows
 
 
+def get_dropbox_client():
+    token = os.environ.get("DROPBOX_TOKEN")
+    if not token:
+        raise ValueError("Lipsește DROPBOX_TOKEN în environment variables")
+    return dropbox.Dropbox(token)
+
+
 @app.route("/")
 def index():
-    init_db()  # se asigură că tabela există mereu
+    init_db()
     clients = get_all()
     return render_template("index.html", clients=clients)
 
@@ -77,6 +86,30 @@ def upload_db():
         return "No selected file", 400
 
     file.save(DB_NAME)
+    init_db()
+    return redirect("/")
+
+
+# === Dropbox Routes ===
+@app.route("/save-dropbox")
+def save_dropbox():
+    dbx = get_dropbox_client()
+    with open(DB_NAME, "rb") as f:
+        dbx.files_upload(f.read(), f"/{DB_NAME}", mode=dropbox.files.WriteMode.overwrite)
+    flash("📤 Baza de date a fost salvată în Dropbox", "success")
+    return redirect("/")
+
+
+@app.route("/load-dropbox")
+def load_dropbox():
+    dbx = get_dropbox_client()
+    try:
+        _, res = dbx.files_download(f"/{DB_NAME}")
+        with open(DB_NAME, "wb") as f:
+            f.write(res.content)
+        flash("📥 Baza de date a fost încărcată din Dropbox", "success")
+    except dropbox.exceptions.ApiError:
+        flash("❌ Fișierul nu există în Dropbox", "error")
     init_db()
     return redirect("/")
 

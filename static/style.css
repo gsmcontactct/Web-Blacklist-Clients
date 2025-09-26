@@ -42,6 +42,21 @@ a {
   color: red; 
 }
 
+a.btn-blue {
+  display: inline-block;
+  background: #007bff;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 6px;
+  margin: 10px 5px;
+  font-size: 14px;
+  transition: background 0.3s ease;
+}
+
+a.btn-blue:hover {
+  background: #0056b3;
+}
+
 /* === Upload Styling === */
 .upload-container {
   display: flex;
