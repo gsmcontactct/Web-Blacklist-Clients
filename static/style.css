@@ -11,16 +11,18 @@ form input {
   padding: 5px; 
 }
 
-button { 
-  padding: 5px 10px; 
+button, .db-btn { 
+  padding: 6px 12px; 
   background: #28a745; 
   color: white; 
   border: none; 
   cursor: pointer; 
   border-radius: 4px;
+  text-decoration: none;
+  font-size: 14px;
 }
 
-button:hover {
+button:hover, .db-btn:hover {
   background: #218838;
 }
 
@@ -42,22 +44,6 @@ a {
   color: red; 
 }
 
-a.btn-blue {
-  display: inline-block;
-  background: #007bff;
-  color: #fff;
-  padding: 6px 14px;
-  border-radius: 6px;
-  margin: 10px 5px;
-  font-size: 14px;
-  transition: background 0.3s ease;
-}
-
-a.btn-blue:hover {
-  background: #0056b3;
-}
-
-/* === Upload Styling === */
 .upload-container {
   display: flex;
   align-items: center;
@@ -89,4 +75,10 @@ a.btn-blue:hover {
   font-size: 13px;
   color: #555;
   font-style: italic;
+}
+
+.dropbox-buttons {
+  margin: 15px 0;
+  display: flex;
+  gap: 10px;
 }

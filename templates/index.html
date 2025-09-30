@@ -19,7 +19,7 @@
     <!-- Upload baza de date -->
     <form action="/upload-db" method="POST" enctype="multipart/form-data" class="upload-form">
         <div class="upload-container">
-            <label for="file-upload" class="upload-btn">📤 Încarcă baza de date manual</label>
+            <label for="file-upload" class="upload-btn">📤 Încarcă baza de date</label>
             <input type="file" id="file-upload" name="file">
             <span id="file-chosen">Niciun fișier selectat</span>
         </div>
@@ -28,8 +28,8 @@
 
     <!-- Dropbox buttons -->
     <div class="dropbox-buttons">
-        <a href="/save-dropbox" class="btn-blue">📤 Salvează în Dropbox</a>
-        <a href="/load-dropbox" class="btn-blue">📥 Încarcă din Dropbox</a>
+        <a href="/save-dropbox" class="db-btn">📤 Salvează în Dropbox</a>
+        <a href="/load-dropbox" class="db-btn">📥 Încarcă din Dropbox</a>
     </div>
 
     <h2>Lista</h2>
@@ -55,7 +55,6 @@
     <script>
       const fileInput = document.getElementById("file-upload");
       const fileChosen = document.getElementById("file-chosen");
-
       fileInput.addEventListener("change", function() {
         fileChosen.textContent = this.files.length > 0 ? this.files[0].name : "Niciun fișier selectat";
       });

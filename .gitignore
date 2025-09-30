@@ -1,4 +1,5 @@
-blacklist.db
 __pycache__/
 *.pyc
+instance/
+clients.db
 .env

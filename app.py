@@ -1,12 +1,25 @@
-from flask import Flask, render_template, request, redirect, send_file, flash
+from flask import Flask, render_template, request, redirect, send_file
 import sqlite3
 import os
 import dropbox
 
 app = Flask(__name__)
-app.secret_key = "supersecret"
 DB_NAME = "clients.db"
 
+# Config Dropbox din variabile de mediu
+DROPBOX_APP_KEY = os.getenv("DROPBOX_APP_KEY")
+DROPBOX_APP_SECRET = os.getenv("DROPBOX_APP_SECRET")
+DROPBOX_REFRESH_TOKEN = os.getenv("DROPBOX_REFRESH_TOKEN")
+
+def get_dropbox_client():
+    if not DROPBOX_APP_KEY or not DROPBOX_APP_SECRET or not DROPBOX_REFRESH_TOKEN:
+        raise ValueError("Lipsesc credențiale Dropbox în variabilele de mediu")
+
+    return dropbox.Dropbox(
+        oauth2_refresh_token=DROPBOX_REFRESH_TOKEN,
+        app_key=DROPBOX_APP_KEY,
+        app_secret=DROPBOX_APP_SECRET
+    )
 
 def init_db():
     conn = sqlite3.connect(DB_NAME)
@@ -22,7 +35,6 @@ def init_db():
     conn.commit()
     conn.close()
 
-
 def get_all():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
@@ -31,20 +43,11 @@ def get_all():
     conn.close()
     return rows
 
-
-def get_dropbox_client():
-    token = os.environ.get("DROPBOX_TOKEN")
-    if not token:
-        raise ValueError("Lipsește DROPBOX_TOKEN în environment variables")
-    return dropbox.Dropbox(token)
-
-
 @app.route("/")
 def index():
     init_db()
     clients = get_all()
     return render_template("index.html", clients=clients)
-
 
 @app.route("/add", methods=["POST"])
 def add():
@@ -60,7 +63,6 @@ def add():
     conn.close()
     return redirect("/")
 
-
 @app.route("/delete/<int:client_id>")
 def delete(client_id):
     conn = sqlite3.connect(DB_NAME)
@@ -70,11 +72,9 @@ def delete(client_id):
     conn.close()
     return redirect("/")
 
-
 @app.route("/download-db")
 def download_db():
     return send_file(DB_NAME, as_attachment=True)
-
 
 @app.route("/upload-db", methods=["POST"])
 def upload_db():
@@ -89,30 +89,21 @@ def upload_db():
     init_db()
     return redirect("/")
 
-
 # === Dropbox Routes ===
 @app.route("/save-dropbox")
 def save_dropbox():
     dbx = get_dropbox_client()
     with open(DB_NAME, "rb") as f:
-        dbx.files_upload(f.read(), f"/{DB_NAME}", mode=dropbox.files.WriteMode.overwrite)
-    flash("📤 Baza de date a fost salvată în Dropbox", "success")
+        dbx.files_upload(f.read(), f"/{DB_NAME}", mode=dropbox.files.WriteMode("overwrite"))
     return redirect("/")
-
 
 @app.route("/load-dropbox")
 def load_dropbox():
     dbx = get_dropbox_client()
-    try:
-        _, res = dbx.files_download(f"/{DB_NAME}")
-        with open(DB_NAME, "wb") as f:
-            f.write(res.content)
-        flash("📥 Baza de date a fost încărcată din Dropbox", "success")
-    except dropbox.exceptions.ApiError:
-        flash("❌ Fișierul nu există în Dropbox", "error")
-    init_db()
+    _, res = dbx.files_download(f"/{DB_NAME}")
+    with open(DB_NAME, "wb") as f:
+        f.write(res.content)
     return redirect("/")
-
 
 if __name__ == "__main__":
     init_db()
